@@ -1,0 +1,87 @@
+---
+title: "Strip Test PCA Plots"
+---
+
+# Loading library
+library(ggfortify)
+library(ggbiplot)
+library(scales)
+library(devtools)
+library(ggpubr)
+
+# Load files
+strip_values <- read.table("temperaturecoral.csv", header=T, sep=',')
+```{r}
+head(strip_values)
+```
+```{r}
+sapply(strip_values, mode)
+sum(is.na(strip_values))
+```
+
+# Make separate table for each species
+Pacuta.data <- strip_values[grep("Pacuta", strip_values$Species), ]
+Mcap.data <- strip_values[grep("Mcapitata", strip_values$Species), ]
+Pcomp.data <- strip_values[grep("Pcompressa", strip_values$Species), ]
+
+# Create PCA object - 1 species
+Pacuta.pca <- prcomp(Pacuta.data[,c(5:6)],
+                   center = TRUE,
+                   scale. = TRUE)
+
+# Create PCA object - 1 species
+Mcap.pca <- prcomp(Mcap.data[,c(5:6)],
+                     center = TRUE,
+                     scale. = TRUE)
+
+# Create PCA object - 1 species
+Pcomp.pca <- prcomp(Pcomp.data[,c(5:6)],
+                     center = TRUE,
+                     scale. = TRUE)
+
+# Summary of the prcomp object
+```{r}
+summary(Mcap.pca)
+```
+
+# Structure of the PCA object
+```{r}
+str(Mcap.pca)
+```
+
+# Plot for each species
+a <- ggbiplot(Pacuta.pca,
+                          data = Pacuta.data,
+                          obs.scale = 1, 
+                          var.scale=1,
+                          ellipse=T,
+                          circle=F,
+                          varname.size=3,
+                          var.axes=T,
+                          groups=Pacuta.data$Condition) +
+                          labs(title="P. acuta PCA")
+
+b <- ggbiplot(Mcap.pca,
+              data = Mcap.data,
+              obs.scale = 1, 
+              var.scale=1,
+              ellipse=T,
+              circle=F,
+              varname.size=3,
+              var.axes=T,
+              groups=Mcap.data$Condition) +
+              theme(legend.position = "None") +
+              labs(title="M. capitata PCA")
+
+c <- ggbiplot(Pcomp.pca,
+              data = Pcomp.data,
+              obs.scale = 1, 
+              var.scale=1,
+              ellipse=T,
+              circle=F,
+              varname.size=3,
+              var.axes=T,
+              groups=Pcomp.data$Condition) +
+              labs(title="P. compressa PCA")
+              
+# End              

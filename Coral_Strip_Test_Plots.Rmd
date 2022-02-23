@@ -1,0 +1,87 @@
+---
+title: "Strip Test Plots"
+
+---
+
+# Load libraries
+library(tidyverse)
+library (tidyr)
+library(ggplot2)
+library(reshape2)
+library(dplyr)
+library(facetscales)
+library(forcats)
+library(devtools)
+library(ggpubr)
+library(cowplot)
+
+### Make strip test plot
+
+#Read data
+data.table <- read.table("temperaturecoral.csv",h=T,sep=",")
+
+```{r}
+head(data.table)
+```
+
+# Make blank data frame (replace with own values)
+blanks <- data.frame(Sample = ("Blank"),
+                     Leukocytes = (231.423),
+                     Glucose = (229.2186),
+                     Ketone = (197.2447)
+                  )
+
+# Subtract blank values from strip test values
+data.table <- data.table%>%
+                       mutate(Leukocytes_Norm = blanks$Leukocytes - Leukocytes)
+
+data.table <- data.table%>%
+                       mutate(Ketone_Norm = blanks$Ketone - Ketone)
+
+data.table <- data.table%>%
+                       mutate(Glucose_Norm = blanks$Glucose - Glucose)
+```{r}
+head(data.table)
+```
+                       
+# Format data for proper plotting order of 2019 data
+sapply(data.table, mode)
+mode(data.table$Genotype) <-'character'
+
+# Make separate table for each species and format data for proper plotting order of 2021 wild sample data
+data.table$Reef <- as.character(data.table$Reef)
+data.table$Colony <- factor(data.table$Colony, order=TRUE, levels=1:16)
+Pacuta.data <- data.table[grep("Pacuta", data.table$Species), ]
+Mcap.data <- data.table[grep("Mcapitata", data.table$Species), ]
+Pcomp.data <- data.table[grep("Pcompressa", data.table$Species), ]
+
+# Plot strip test results for one test at a time
+a <- ggplot(data.table, aes(x=Condition, y=Ketone_Norm)) + 
+  geom_boxplot() +
+  geom_dotplot(binaxis='y', stackdir='center', dotsize = 0.8,aes(fill=Condition)) +
+  facet_grid(. ~ Species,scales = "free") +
+  theme(legend.position = "none") +
+  xlab("Treatment") +
+  ylab("Relative enzymatic activity") +
+  ggtitle("Ketone test thermal stress (2021)") 
+
+# Plot all strip test results for one species/experiment & one test to view variability
+b <- ggplot(data.table, aes(x=Species, y=Ketone_Norm)) + 
+  geom_boxplot() +
+  geom_dotplot(binaxis='y', stackdir='center', dotsize = 0.8,aes(fill=Condition)) +
+  facet_grid(. ~ Species,scales = "free") +
+  theme(legend.position = "right") +
+  xlab("All samples") +
+  ylab("Relative enzymatic activity") +
+  ggtitle("Variation in ketone test") 
+
+# Combine 2 plots
+figure <- ggarrange(a, b,
+                    labels = c("A", "B"),
+                    ncol = 1, nrow = 2,
+                    widths = c(1, 1),
+                    common.legend = TRUE, legend = "bottom")
+
+figure
+
+# End
